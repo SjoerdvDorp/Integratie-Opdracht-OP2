@@ -22,6 +22,24 @@ X_train, X_test = train_test_split(data_set, test_size=0.3, random_state=42)
 print("Data Set Info:")
 print(data_set.info())
 
+# Definieer een mapping van stringwaarden naar float getallen
+stay_mapping = {
+    '0-10': 5,
+    '11-20': 15,
+    '21-30': 25,
+    '31-40': 35,
+    '41-50': 45,
+    '51-60': 55,
+    '61-70': 65,
+    '71-80': 75,
+    '81-90': 85,
+    '91-100': 95,
+    'More than 100 Days': 100,
+}
+
+# Convert 'Stay' kolom naar float met gebruik van mapping
+data_set['Stay'] = data_set['Stay'].map(stay_mapping)
+
 # Statistische Waarden in de data set
 print("\nStatistische waarden Data Set:")
 print(data_set.describe())
