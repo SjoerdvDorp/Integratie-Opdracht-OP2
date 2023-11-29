@@ -1,5 +1,5 @@
-# author: Sjoerd van Dorp, 1032109, 14/11/2023, version 1.0
-# Tussentijds opdracht 1
+# author: Sjoerd van Dorp, 1032109, 14/11/2023, version 4.0
+# Tussentijdse Opdracht 1
 
 import matplotlib.pyplot as plt
 import numpy as np
