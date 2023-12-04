@@ -16,17 +16,19 @@ warnings.filterwarnings('ignore')
 file_path = 'train.csv'
 df = pd.read_csv(file_path)
 
-# Train data
-X_train, Y_train = train_test_split(df, test_size=0.3, random_state=100)
-
 # Informatie over de data set
 print("Data Set Info:")
 print(df.info())
+
+# Drop onnodige kolommen
+columns_to_drop = ['case_id', 'patientid']
+combined_df = df.drop(columns=columns_to_drop)
 
 # Omzetten van 'Stay' naar numerieke waarden
 stay_mapping = {'0-10': 5, '11-20': 15, '21-30': 25, '31-40': 35, '41-50': 45, '51-60': 55, '61-70': 65, '71-80': 75, '81-90': 85, '91-100': 95, 'More than 100 Days': 100}
 df['Stay'] = df['Stay'].map(stay_mapping)
 
+# Mapping van age_mapping
 age_mapping = {'0-10': 5, '11-20': 15, '21-30': 25, '31-40': 35, '41-50': 45, '51-60': 55, '61-70': 65, '71-80': 75, '81-90': 85, '91-100': 95, 'More than 100 Days': 100}
 df['Age'] = df['Age'].map(age_mapping)
 
@@ -62,6 +64,18 @@ df['Severity of Illness'] = df['Severity of Illness'].map(severity_mapping)
 print("\nStatistische waarden Data Set:")
 print(df.describe())
 
+# Aantal ontbrekende waarden in de data set
+print("\nOntbrekende waarden in Data Set:")
+print(df.isnull().sum())
+
+# Aanmaken van functies om lege velden te vullen
+print("\nOntbrekende waarden in Data Set vullen: ...")
+df['Bed Grade'] = df['Bed Grade'].fillna(df['Bed Grade'].mode()[0])
+
+# Unieke waarden in de data set
+print("\nUnieke waarden in Data Set:")
+print(df.nunique())
+
 # Normaal verdeling plot
 selected_column = 'Admission_Deposit'
 plt.figure(figsize=(10, 6))
@@ -77,23 +91,6 @@ plt.title(f'Normale Verdeling van {selected_column}')
 plt.xlabel('Waarden')
 plt.ylabel('Frequentie')
 plt.show()
-
-# Aantal ontbrekende waarden in de data set
-print("\nOntbrekende waarden in Data Set:")
-print(df.isnull().sum())
-
-# Aanmaken van functies om lege velden te vullen
-print("\nOntbrekende waarden in Data Set vullen: ...")
-df['Stay'] = df['Stay'].fillna(df['Stay'].mode()[0])
-df['Bed Grade'] = df['Bed Grade'].fillna(df['Bed Grade'].mode()[0])
-
-# Ontbrekende waarden in de data set opnieuw printen
-print("\nNieuwe ontbrekende waarden in Data Set:")
-print(df.isnull().sum())
-
-# Unieke waarden in de data set
-print("\nUnieke waarden in Data Set:")
-print(df.nunique())
 
 # Selecteer alleen numerieke kolommen
 numerical_columns = df.select_dtypes(include=[np.number])
@@ -124,7 +121,6 @@ df["Hospital_type_code"] = df["Hospital_type_code"].astype("category")
 df["Ward_Type"] = df["Ward_Type"].astype("category")
 df["Bed Grade"] = df["Bed Grade"].astype("category")
 df["Age"] = df["Age"].astype("category")
-
 
 # Plot voor "Hospital_type_code"
 plt.figure(figsize=(8, 5))
