@@ -11,40 +11,33 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import warnings
 
-# Settings the warnings to be ignored
+# Set the warnings to be ignored
 warnings.filterwarnings('ignore')
 
-# Load the 'train.csv' file
+# Load the 'Zorg-LOS.csv' file
 file_path = "C:\\Users\\sjoer\\OneDrive\\Documents\\HR\\Jaar 3\\OP2\\Predictive Analytics\\Tussentijdse opdrachten\\1\\Zorg-LOS.csv"
 df = pd.read_csv(file_path)
 
-X = df['Ward_Type']
+# Select features and target variable
+X = df.drop(columns=['Stay'])  # Remove the target variable 'Stay'
 Y = df['Stay']
 
 # Train/test split
-X_train, Y_train = train_test_split(df, test_size=0.3, random_state=100)
+X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.1, random_state=10)
 
 # Aantal ontbrekende waarden in de data set
 print("\nOntbrekende waarden in Data Set:")
 print(df.isnull().sum())
 
-unique_stay_values_y = df['Ward_Type'].unique()
-unique_stay_values_x = df['Stay'].unique()
-
-print("\nWaarden uit de Y set:")
-print(unique_stay_values_y)
-print("\nWaarden uit de X set:")
-print(unique_stay_values_x)
-
 # Modellen testen
 
 # Random Forest
-rf_model = RandomForestClassifier(random_state=42)
+rf_model = RandomForestClassifier(random_state=1)
 rf_model.fit(X_train, Y_train)
 rf_pred = rf_model.predict(X_test)
 
 # Logistic Regression
-lr_model = LogisticRegression(random_state=42)
+lr_model = LogisticRegression(random_state=1)
 lr_model.fit(X_train, Y_train)
 lr_pred = lr_model.predict(X_test)
 
@@ -74,9 +67,25 @@ svm_roc_auc = roc_auc_score(Y_test, svm_pred)
 
 # Feature Heatmap
 plt.figure(figsize=(12, 8))
-sns.heatmap(X.corr(), annot=True, cmap='coolwarm')
+sns.heatmap(X_train.corr(), annot=True, cmap='coolwarm')
 plt.title('Correlation Heatmap')
 plt.show()
 
-print("Resultaten Tabel:")
-print(results_table)
+# Print results
+print("Random Forest Results:")
+print(f"Confusion Matrix:\n{rf_conf_matrix}")
+print(f"Accuracy: {rf_accuracy:.4f}")
+print(f"AUC: {rf_roc_auc:.4f}")
+print(classification_report(Y_test, rf_pred))
+
+print("\nLogistic Regression Results:")
+print(f"Confusion Matrix:\n{lr_conf_matrix}")
+print(f"Accuracy: {lr_accuracy:.4f}")
+print(f"AUC: {lr_roc_auc:.4f}")
+print(classification_report(Y_test, lr_pred))
+
+print("\nSupport Vector Machine Results:")
+print(f"Confusion Matrix:\n{svm_conf_matrix}")
+print(f"Accuracy: {svm_accuracy:.4f}")
+print(f"AUC: {svm_roc_auc:.4f}")
+print(classification_report(Y_test, svm_pred))

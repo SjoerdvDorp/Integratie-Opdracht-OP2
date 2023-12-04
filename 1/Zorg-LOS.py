@@ -21,8 +21,9 @@ print("Data Set Info:")
 print(df.info())
 
 # Drop onnodige kolommen
+print("\nOnnodige kolommen droppen...")
 columns_to_drop = ['case_id', 'patientid']
-combined_df = df.drop(columns=columns_to_drop)
+df = df.drop(columns=columns_to_drop)
 
 # Omzetten van 'Stay' naar numerieke waarden
 stay_mapping = {'0-10': 5, '11-20': 15, '21-30': 25, '31-40': 35, '41-50': 45, '51-60': 55, '61-70': 65, '71-80': 75, '81-90': 85, '91-100': 95, 'More than 100 Days': 100}
