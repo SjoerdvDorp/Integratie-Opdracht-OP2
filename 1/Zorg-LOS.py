@@ -7,7 +7,7 @@ import pandas as pd
 import seaborn as sns
 import warnings
 from scipy.stats import norm
-from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder
 
 # Settings the warnings to be ignored
 warnings.filterwarnings('ignore')
@@ -25,41 +25,25 @@ print("\nOnnodige kolommen droppen...")
 columns_to_drop = ['case_id', 'patientid']
 df = df.drop(columns=columns_to_drop)
 
-# Omzetten van 'Stay' naar numerieke waarden
-stay_mapping = {'0-10': 5, '11-20': 15, '21-30': 25, '31-40': 35, '41-50': 45, '51-60': 55, '61-70': 65, '71-80': 75, '81-90': 85, '91-100': 95, 'More than 100 Days': 100}
-df['Stay'] = df['Stay'].map(stay_mapping)
+le = LabelEncoder()
+df['Stay'] = le.fit_transform(df['Stay'].astype('str'))
+# print(traindf.head())
 
-# Mapping van age_mapping
-age_mapping = {'0-10': 5, '11-20': 15, '21-30': 25, '31-40': 35, '41-50': 45, '51-60': 55, '61-70': 65, '71-80': 75, '81-90': 85, '91-100': 95, 'More than 100 Days': 100}
-df['Age'] = df['Age'].map(age_mapping)
+#Label Encoding all the columns in Train and test datasets
+for i in ['Hospital_type_code', 'Hospital_region_code',
+'Department', 'Ward_Type', 'Ward_Facility_Code', 'Type of Admission', 'Severity of Illness', 'Age']:
+    le = LabelEncoder()
+    df[i] = le.fit_transform(df[i].astype(str))
 
-# Mapping van Hospital_type_code
-hospital_type_mapping = {'a': 1, 'b': 2, 'c': 3, 'd': 4, 'e': 5, 'f': 6, 'g': 7}
-df['Hospital_type_code'] = df['Hospital_type_code'].map(hospital_type_mapping)
+# Replacing NA values in Bed Grade Column for Train datasets
+df['Bed Grade'].fillna(df['Bed Grade'].mode()[0],
+                            inplace=True)
+# Replacing NA values in Column for Train datasets
+df['City_Code_Patient'].fillna(df['City_Code_Patient'].
+                                    mode()[0], inplace=True)
 
-# Mapping van Hospital_region_code
-hospital_region_mapping = {'X': 1, 'Y': 2, 'Z': 3}
-df['Hospital_region_code'] = df['Hospital_region_code'].map(hospital_region_mapping)
-
-# Mapping van Department
-department_mapping = {'anesthesia': 1, 'gynecology': 2, 'radiotherapy': 3, 'surgery': 4, 'TB & Chest disease': 5}
-df['Department'] = df['Department'].map(department_mapping)
-
-# Mapping van Ward_Type
-ward_type_mapping = {'P': 1, 'Q': 2, 'R': 3, 'S': 4, 'T': 5, 'U': 6}
-df['Ward_Type'] = df['Ward_Type'].map(ward_type_mapping)
-
-# Mapping van Ward_Facility_Code
-ward_facility_mapping = {'A': 1, 'B': 2, 'C': 3, 'D': 4, 'E': 5, 'F': 6}
-df['Ward_Facility_Code'] = df['Ward_Facility_Code'].map(ward_facility_mapping)
-
-# Mapping van Type of Admission
-admission_mapping = {'Emergency': 1, 'Trauma': 2, 'Urgent': 3}
-df['Type of Admission'] = df['Type of Admission'].map(admission_mapping)
-
-# Mapping van Severity of Illness
-severity_mapping = {'Minor': 1, 'Moderate': 2, 'Extreme': 3}
-df['Severity of Illness'] = df['Severity of Illness'].map(severity_mapping)
+# Label Encoding Stay column in train dataset
+from sklearn.preprocessing import LabelEncoder
 
 # Statistische Waarden in de data set
 print("\nStatistische waarden Data Set:")
@@ -122,30 +106,6 @@ df["Hospital_type_code"] = df["Hospital_type_code"].astype("category")
 df["Ward_Type"] = df["Ward_Type"].astype("category")
 df["Bed Grade"] = df["Bed Grade"].astype("category")
 df["Age"] = df["Age"].astype("category")
-
-# Plot voor "Hospital_type_code"
-plt.figure(figsize=(8, 5))
-sns.countplot(x=df["Hospital_type_code"], palette="Blues")
-plt.title("Hospital Type Code")
-plt.xlabel("Hospital Type Code")
-plt.ylabel("Count")
-plt.show()
-
-# Plot voor "Ward_Type"
-plt.figure(figsize=(8, 5))
-sns.countplot(x=df["Ward_Type"], palette="Greens")
-plt.title("Ward Type")
-plt.xlabel("Ward Type")
-plt.ylabel("Count")
-plt.show()
-
-# Plot voor "Bed Grade"
-plt.figure(figsize=(8, 5))
-sns.countplot(x=df["Bed Grade"], palette="Reds")
-plt.title("Bed Grade")
-plt.xlabel("Bed Grade")
-plt.ylabel("Count")
-plt.show()
 
 # Plot voor "Age"
 plt.figure(figsize=(8, 5))
