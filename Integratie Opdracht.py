@@ -1,39 +1,20 @@
 # author: Sjoerd van Dorp, 1032109, 08/12/2023, version 1.0
 # Integratie Opdracht
 
-import numpy as np # linear algebra
-import pandas as pd # data processing, CSV file I/O (e.g. pd.read_csv)
-import seaborn as sns # for data visualization
-import matplotlib.pyplot as plt # to plot charts
-from datetime import date
+import numpy as np
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
 from collections import Counter
-from sklearn.preprocessing import LabelEncoder
+from sklearn.preprocessing import LabelEncoder, label_binarize
+from sklearn.metrics import roc_curve, auc, classification_report, confusion_matrix, accuracy_score
 from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import label_binarize
-from sklearn.metrics import roc_curve, auc
-from sklearn.metrics import accuracy_score as acc_score_nb
-from sklearn.svm import SVC
-from sklearn.metrics import accuracy_score, classification_report
-from sklearn.ensemble import GradientBoostingClassifier
-import os
-
-# Modeling Libraries
-from sklearn.preprocessing import QuantileTransformer
-from sklearn.model_selection import cross_val_score, StratifiedKFold
+from xgboost import XGBClassifier
 from scipy.stats import norm
 from sklearn.naive_bayes import GaussianNB
-from sklearn.metrics import confusion_matrix, accuracy_score, precision_score
-from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier, GradientBoostingClassifier, VotingClassifier
-from sklearn.linear_model import LogisticRegression
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.tree import DecisionTreeClassifier
-from sklearn.svm import SVC
-from sklearn.model_selection import GridSearchCV, cross_val_score, StratifiedKFold, learning_curve
-from lazypredict.Supervised import LazyRegressor, LazyClassifier
-from sklearn.metrics import accuracy_score
-from lazypredict.Supervised import LazyClassifier
-import xgboost
+from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 import warnings
+
 
 # Settings the warnings to be ignored
 warnings.filterwarnings('ignore')
@@ -68,8 +49,8 @@ testdf = testdf.drop(columns=columns_to_drop)
 
 # NA waarden in de Bed Grade kolom voor de Train en Test datasets vervangen met de modus
 print("\nLege waarden in 'Bed Grade' en 'City_Code_Patient' verwijderen...")
-traindf['Bed Grade'].fillna(traindf['Bed Grade'].mode()[0], inplace = True)
-testdf['Bed Grade'].fillna(testdf['Bed Grade'].mode()[0], inplace = True)
+traindf['Bed Grade'].fillna(traindf['Bed Grade'].mode()[0], inplace=True)
+testdf['Bed Grade'].fillna(testdf['Bed Grade'].mode()[0], inplace=True)
 
 # NA waarden in de City_Code_Patient kolom voor de Train en Test datasets vervangen met de modus
 traindf['City_Code_Patient'].fillna(traindf['City_Code_Patient'].mode()[0], inplace = True)
@@ -163,7 +144,8 @@ plt.title('Boxplot')
 plt.show()
 
 # Modellen trainen
-print("\nDe accuracy van de modellen worden geprint: ")
+
+print("\n\nDe modellen worden nu getraind en de accuracy word geprint: ")
 
 # Gradient Boosting Model
 gb_classifier = GradientBoostingClassifier(n_estimators=100, learning_rate=0.1, max_depth=3, random_state=100)
@@ -182,7 +164,7 @@ acc_score_nb = accuracy_score(prediction_nb,y_test)
 print("\nNaive Bayes Acurracy:", acc_score_nb*100)
 
 # XGBoost Model
-classifier_xgb = xgboost.XGBClassifier(max_depth=4, learning_rate=0.1,
+classifier_xgb = XGBClassifier(max_depth=4, learning_rate=0.1,
 n_estimators=800,objective='multi:softmax', reg_alpha=0.5,
 reg_lambda=1.5, booster='gbtree', n_jobs=4, min_child_weight=2, base_score= 0.75)
 model_xgb = classifier_xgb.fit(X_train, y_train)
@@ -235,4 +217,30 @@ plt.xlabel('Predicted')
 plt.ylabel('Actual')
 plt.show()
 
+print("\n\nDe validatietest: ")
+
+# De kolom 'Stay' laat vallen
+original_stay_labels = traindf['Stay'].copy()
+
+# Selecteer voorspellende kolommen - met uitzondering van identificatiegegevens en de doelvariabele 'Stay'
+predictor_columns = [col for col in traindf.columns if col not in ['case_id', 'patientid', 'Stay']]
+
+# Categorische variabelen coderen in de trainingset
+X_train = pd.get_dummies(traindf[predictor_columns], drop_first=True)
+
+# Zorg ervoor dat X_train en originele_stay_labels hetzelfde aantal rijen hebben
+assert X_train.shape[0] == original_stay_labels.shape[0], "Mismatch in number of rows after encoding"
+
+# De trainingsgegevens opsplitsen in trainings- en validatiesets
+X_train_split, X_val, y_train_split, y_val = train_test_split(X_train, original_stay_labels, test_size=0.2, random_state=42)
+
+# De XGBoost-classificator maken en passen
+xgb_classifier = XGBClassifier(n_estimators=100, random_state=42, use_label_encoder=False, eval_metric='mlogloss')
+xgb_classifier.fit(X_train_split, y_train_split)
+
+# Voorspellen op de validatieset
+y_val_pred = xgb_classifier.predict(X_val)
+
+# De classifier evalueren
+print("\nClassifier Report:\n", classification_report(y_val, y_val_pred))
 
