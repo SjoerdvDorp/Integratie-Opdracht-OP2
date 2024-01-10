@@ -178,7 +178,31 @@ prediction_rf = model_rf.predict(X_test)
 acc_score_rf = accuracy_score(prediction_rf, y_test)
 print("\nRandom Forest Accuracy:", acc_score_rf * 100)
 
-print("\nEr is te zien dat het XGboost model de hoogste accuracy heeft. Laten we voor dit model een confusion matrix en AOC maken: ")
+
+#===================================================================================================================
+# Nog niet werkend maar zou graag willen weten of dit de goeie kant op gaat
+#===================================================================================================================
+
+"""
+print("\nVoorspellingen maken met XGBoost op testdata")
+
+# Verwijder de 'Stay' kolom uit de testdata
+testdf_processed = testdf.drop(['Stay'], axis=1)
+
+# Maak voorspellingen met het XGBoost-model
+test_predictions = model_xgb.predict(testdf_processed)
+
+# Terugvertalen van de voorspelde labels naar oorspronkelijke categorieën
+test_predictions_labels = le.inverse_transform(test_predictions)
+
+# Voeg de vertaalde voorspellingen toe aan de test dataframe
+testdf['Predicted Stay Category'] = test_predictions_labels
+
+# Opslaan van de resultaten in een nieuw CSV-bestand
+testdf.to_csv('test_predictions_with_labels.csv', index=False)
+"""
+
+print("\nLaten we nu voor dit model een confusion matrix en AOC maken: ")
 
 # Confusion matrix en AOC
 y_test_bin = label_binarize(y_test, classes=model_xgb.classes_)
