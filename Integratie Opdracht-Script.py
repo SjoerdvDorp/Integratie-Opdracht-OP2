@@ -171,6 +171,13 @@ prediction_xgb = model_xgb.predict(X_test)
 acc_score_xgb = accuracy_score(prediction_xgb,y_test)
 print("\nXGboost Accuracy:", acc_score_xgb*100)
 
+# Vervang de numerieke labels door de werkelijke categorieën voor de voorspellingen op X_test voor XGBoost
+prediction_xgb_categories = pd.Series(prediction_xgb).replace({0: '0-10', 1: '11-20', 2: '21-30', 3: '31-40', 4: '41-50', 5: '51-60', 6: '61-70', 7: '71-80', 8: '81-90', 9: '91-100', 10: 'More than 100 Days'})
+
+# Toon de resultaten
+print("\nAantal voorspellingen per categorie in het train model van XGBoost:")
+print(prediction_xgb_categories.value_counts())
+
 # RandomForest Model
 classifier_rf = RandomForestClassifier(n_estimators=100, random_state=100)
 model_rf = classifier_rf.fit(X_train, y_train)
@@ -178,31 +185,24 @@ prediction_rf = model_rf.predict(X_test)
 acc_score_rf = accuracy_score(prediction_rf, y_test)
 print("\nRandom Forest Accuracy:", acc_score_rf * 100)
 
+print("\n\nNu voer ik de modeltest uit op de test dataset: ")
 
-#===================================================================================================================
-# Nog niet werkend maar zou graag willen weten of dit de goeie kant op gaat
-#===================================================================================================================
+# Verwijder de 'Stay' kolom voor de voorspelling
+testdf = testdf.drop('Stay', axis=1)
 
-"""
-print("\nVoorspellingen maken met XGBoost op testdata")
+# Voer de voorspelling uit
+pred_xgb = classifier_xgb.predict(testdf)
+result_xgb = pd.DataFrame(pred_xgb, columns=['Stay'])
 
-# Verwijder de 'Stay' kolom uit de testdata
-testdf_processed = testdf.drop(['Stay'], axis=1)
+# Vervang de numerieke labels door de werkelijke categorieën
+result_xgb['Stay'] = result_xgb['Stay'].replace({0: '0-10', 1: '11-20', 2: '21-30', 3: '31-40', 4: '41-50', 5: '51-60', 6: '61-70', 7: '71-80', 8: '81-90', 9: '91-100', 10: 'More than 100 Days'})
 
-# Maak voorspellingen met het XGBoost-model
-test_predictions = model_xgb.predict(testdf_processed)
+# Toon de resultaten
+print("\nAantal voorspellingen per categorie in het test model:\n")
+print(result_xgb['Stay'].value_counts())
 
-# Terugvertalen van de voorspelde labels naar oorspronkelijke categorieën
-test_predictions_labels = le.inverse_transform(test_predictions)
 
-# Voeg de vertaalde voorspellingen toe aan de test dataframe
-testdf['Predicted Stay Category'] = test_predictions_labels
-
-# Opslaan van de resultaten in een nieuw CSV-bestand
-testdf.to_csv('test_predictions_with_labels.csv', index=False)
-"""
-
-print("\nLaten we nu voor dit model een confusion matrix en AOC maken: ")
+print("\n\nLaten we nu voor dit model een confusion matrix en AOC maken... ")
 
 # Confusion matrix en AOC
 y_test_bin = label_binarize(y_test, classes=model_xgb.classes_)
@@ -257,13 +257,19 @@ assert X_train.shape[0] == original_stay_labels.shape[0], "Mismatch in number of
 # De trainingsgegevens opsplitsen in trainings- en validatiesets
 X_train_split, X_val, y_train_split, y_val = train_test_split(X_train, original_stay_labels, test_size=0.2, random_state=42)
 
-# De XGBoost-classificator maken en passen
+# Maak de XGBoost-classificator en pas deze toe
 xgb_classifier = XGBClassifier(n_estimators=100, random_state=42, use_label_encoder=False, eval_metric='mlogloss')
 xgb_classifier.fit(X_train_split, y_train_split)
 
 # Voorspellen op de validatieset
 y_val_pred = xgb_classifier.predict(X_val)
 
-# De classifier evalueren
-print("\nClassifier Report:\n", classification_report(y_val, y_val_pred))
+# Converteer de werkelijke labels naar categorieën
+y_val_categories = y_val.replace({0: '0-10', 1: '11-20', 2: '21-30', 3: '31-40', 4: '41-50', 5: '51-60', 6: '61-70', 7: '71-80', 8: '81-90', 9: '91-100', 10: 'More than 100 Days'})
+
+# Converteer de voorspelde labels naar categorieën
+y_val_pred_categories = pd.Series(y_val_pred).replace({0: '0-10', 1: '11-20', 2: '21-30', 3: '31-40', 4: '41-50', 5: '51-60', 6: '61-70', 7: '71-80', 8: '81-90', 9: '91-100', 10: 'More than 100 Days'})
+
+# De classifier evalueren met de omgezette categorieën
+print("\nClassifier Report:\n", classification_report(y_val_categories, y_val_pred_categories))
 
